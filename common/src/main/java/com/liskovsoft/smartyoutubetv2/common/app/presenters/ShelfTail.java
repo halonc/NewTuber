@@ -41,6 +41,15 @@ final class ShelfTail<G> {
     static final int MAX_ROUNDS = 20;
     /** A round - its section list plus its shelves' pages - that added fewer cards ends the feed. */
     static final int MIN_ROUND_CARDS = 12;
+    /**
+     * NEWTUBE(fresh-home): rounds in a row that added fewer than {@link #MIN_ROUND_CARDS} while the
+     * section drops cards it has already shown ({@link #startRound(int, boolean)} with a fresh-mix
+     * hint). A fetch whose duplicates are filtered out is short by design, so a Home that answers the
+     * same page again needs a couple of tries before the pool is really spent - measured 2026-11-05,
+     * one extra fetch was needed on the third refresh of a session, none on the second. Past this many
+     * short rounds the feed ends as before, so the request count stays bounded.
+     */
+    static final int MAX_LOW_YIELD_ROUNDS = 3;
     /** Fetches in a row that returned nothing after which the next shelf waits for the grid to ask. */
     static final int MAX_CHAINED_NOTHING = 2;
 
@@ -66,6 +75,8 @@ final class ShelfTail<G> {
     private int mRounds;
     /** Grid size when the current round began (the first load starts from an empty grid). */
     private int mRoundStartGridSize;
+    /** Short rounds in a row so far, counted only when a fresh-mix hint was given. */
+    private int mLowYieldRounds;
 
     /** A row section's shelves. */
     ShelfTail(Keys<G> keys) {
@@ -202,12 +213,36 @@ final class ShelfTail<G> {
      * clean empty-page run.
      */
     boolean startRound(int gridSize) {
+        return startRound(gridSize, false);
+    }
+
+    /**
+     * @param freshMixHint the section filters out cards it has already shown, so a round that adds
+     *                     fewer than {@link #MIN_ROUND_CARDS} is still worth another try (up to
+     *                     {@link #MAX_LOW_YIELD_ROUNDS} short rounds in a row). A round that adds
+     *                     nothing ends the feed either way.
+     */
+    boolean startRound(int gridSize, boolean freshMixHint) {
         // A grid smaller than at the last round's start was repainted (FeedCache keeps the first 120
         // cards) or had cards removed: judge from zero, as for the first load.
         int roundStart = gridSize < mRoundStartGridSize ? 0 : mRoundStartGridSize;
-        if (gridSize < 0 || mRounds >= MAX_ROUNDS || gridSize - roundStart < MIN_ROUND_CARDS) {
+        if (gridSize < 0 || mRounds >= MAX_ROUNDS) {
             return false;
         }
+
+        int added = gridSize - roundStart;
+        if (added <= 0) {
+            return false; // a round that added no card at all ends the feed
+        }
+        if (added < MIN_ROUND_CARDS) {
+            if (!freshMixHint || mLowYieldRounds >= MAX_LOW_YIELD_ROUNDS) {
+                return false; // an unproductive round (all duplicates) ends the feed for good
+            }
+            mLowYieldRounds++;
+        } else {
+            mLowYieldRounds = 0;
+        }
+
         mRounds++;
         mRoundStartGridSize = gridSize;
         mEmptyPages = 0;
@@ -218,6 +253,11 @@ final class ShelfTail<G> {
 
     int rounds() {
         return mRounds;
+    }
+
+    /** Short fresh-mix rounds used so far, for logging and tests. */
+    int lowYieldRounds() {
+        return mLowYieldRounds;
     }
 
     /** True once, for the first request that finds nothing left to fetch (one log line per tail). */

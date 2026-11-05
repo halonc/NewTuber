@@ -17,6 +17,7 @@ import com.liskovsoft.sharedutils.rx.RxHelper;
 import com.liskovsoft.smartyoutubetv2.common.R;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.BrowseSection;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Playlist;
+import com.liskovsoft.smartyoutubetv2.common.app.models.data.RecentHomeCards;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.SettingsGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.SettingsItem;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
@@ -46,6 +47,7 @@ import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager.AccountCha
 import com.liskovsoft.smartyoutubetv2.common.misc.NetPath;
 import com.liskovsoft.smartyoutubetv2.common.prefs.AccountsData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.BlockedChannelData;
+import com.liskovsoft.smartyoutubetv2.common.prefs.HomeFeedData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.MainUIData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerTweaksData;
 import com.liskovsoft.smartyoutubetv2.common.utils.Utils;
@@ -102,6 +104,8 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
      * observable is swapped (sorting/style changes).
      */
     private static final long SECTION_FRESH_MS = 5 * 60 * 1_000;
+    /** NEWTUBE(fresh-home): Home gets its own, much shorter, window. */
+    private static final long HOME_SECTION_FRESH_MS = 60 * 1_000;
     private final Map<Integer, Long> mSectionFetchTimeMs = new HashMap<>();
     private boolean mForceSectionUpdate;
     /**
@@ -844,6 +848,20 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
      * just-watched video to appear the moment they return to it. Local/settings sections are
      * cheap in-process computations and never had a network cost to skip.
      */
+    /**
+     * NEWTUBE(fresh-home): the sections {@link RecentHomeCards} filters, so a short round is a
+     * filtered duplicate rather than a spent feed.
+     */
+    private boolean isFreshHomeSection() {
+        if (mCurrentSection == null) {
+            return false;
+        }
+
+        int id = mCurrentSection.getId();
+
+        return id == MediaGroup.TYPE_HOME || id == MediaGroup.TYPE_SUGGESTIONS;
+    }
+
     private boolean isSectionFresh(BrowseSection section) {
         if (section.getId() == MediaGroup.TYPE_HISTORY) {
             return false;
@@ -858,7 +876,22 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
         }
 
         Long fetchedMs = mSectionFetchTimeMs.get(section.getId());
-        return fetchedMs != null && System.currentTimeMillis() - fetchedMs < SECTION_FRESH_MS;
+        return fetchedMs != null && System.currentTimeMillis() - fetchedMs < sectionFreshMs(section);
+    }
+
+    /**
+     * NEWTUBE(fresh-home): Home is the section the user pulls to refresh, and its answer is mostly
+     * the same cards (see {@link RecentHomeCards}); holding it for the general TTL is what makes a
+     * re-visit look like "nothing refreshed". Sixty seconds still absorbs a tab switch, not a refresh.
+     */
+    private long sectionFreshMs(BrowseSection section) {
+        int id = section.getId();
+
+        if (id == MediaGroup.TYPE_HOME || id == MediaGroup.TYPE_SUGGESTIONS) {
+            return HOME_SECTION_FRESH_MS;
+        }
+
+        return SECTION_FRESH_MS;
     }
 
     /**
@@ -873,6 +906,12 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
 
     private void markSectionFetched(int sectionId) {
         mSectionFetchTimeMs.put(sectionId, System.currentTimeMillis());
+
+        // NEWTUBE(fresh-home): the fetch is on screen - write the window of shown cards out.
+        RecentHomeCards recent = HomeFeedData.instance(getContext()).recent();
+        if (recent != null) {
+            recent.flush();
+        }
 
         // NEWTUBE(feed-retry): content arrived - the error episode (if any) is over.
         int failures = mFeedRetry.getFailures();
@@ -906,6 +945,14 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
             getView().showProgressBar(false);
             getView().onSectionContentCurrent(section.getId());
             return;
+        }
+
+        // NEWTUBE(fresh-home): a Home fetch is starting - its cap on dropped cards counts anew.
+        if (section.getId() == MediaGroup.TYPE_HOME || section.getId() == MediaGroup.TYPE_SUGGESTIONS) {
+            RecentHomeCards recent = HomeFeedData.instance(getContext()).recent();
+            if (recent != null) {
+                recent.beginRefresh();
+            }
         }
 
         switch (section.getType()) {
@@ -1250,9 +1297,16 @@ public class BrowsePresenter extends BasePresenter<BrowseView> implements Sectio
             Observable<List<MediaGroup>> groups = mCurrentSection.getType() == BrowseSection.TYPE_ROW
                     ? mRowMapping.get(mCurrentSection.getId()) : null;
             String reason = tail.isStopped() ? "empty-pages" : "no-more-pages";
-            if (groups != null && tail.startRound(gridSize)) {
+            boolean freshMix = isFreshHomeSection();
+            if (groups != null && tail.startRound(gridSize, freshMix)) {
+                if (freshMix) {
+                    RecentHomeCards recent = HomeFeedData.instance(getContext()).recent();
+                    if (recent != null) {
+                        recent.beginRefresh(); // the cap on dropped cards counts anew
+                    }
+                }
                 NetPath.log("shelf-tail round=" + tail.rounds() + " section=" + mCurrentSection.getId()
-                        + " grid=" + gridSize + " after=" + reason);
+                        + " grid=" + gridSize + " after=" + reason + (freshMix ? " fresh-home" : ""));
                 getView().showProgressBar(true);
                 walkRows(mCurrentSection, groups, tail, true);
             } else if (tail.consumeEndNotice()) {

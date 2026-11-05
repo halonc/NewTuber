@@ -17,6 +17,7 @@ import com.liskovsoft.smartyoutubetv2.common.misc.BackupAndRestoreManager;
 import com.liskovsoft.smartyoutubetv2.common.misc.MediaServiceManager;
 import com.liskovsoft.smartyoutubetv2.common.misc.VideoDownloads;
 import com.liskovsoft.smartyoutubetv2.common.prefs.GeneralData;
+import com.liskovsoft.smartyoutubetv2.common.prefs.HomeFeedData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.MainUIData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.SearchData;
 import com.liskovsoft.smartyoutubetv2.common.utils.ClickbaitRemover;
@@ -179,6 +180,13 @@ final class AppPages {
                 // NEWTUBE(#45): no longer turns DeArrow titles off - both can be on; DeArrow's
                 // crowd title wins and the original title is the fallback (Video.getTitle()).
                 mainUIData::isUnlocalizedTitlesEnabled, mainUIData::setUnlocalizedTitlesEnabled));
+
+        // NEWTUBE(fresh-home): Home repeats most of what it just sent, so the app hides what it has
+        // already shown. Off = YouTube's feed exactly as it arrives.
+        rows.add(SettingsRow.toggle(context.getString(R.string.mobile_settings_fresh_home),
+                context.getString(R.string.mobile_settings_fresh_home_summary),
+                () -> HomeFeedData.instance(context).isFreshHomeEnabled(),
+                value -> HomeFeedData.instance(context).setFreshHomeEnabled(value)));
 
         // On the phone these change what the feed holds, not its layout (both work): kept as choices.
         rows.add(SettingsRow.<Boolean>choice(context.getString(R.string.mobile_settings_pinned_channels))

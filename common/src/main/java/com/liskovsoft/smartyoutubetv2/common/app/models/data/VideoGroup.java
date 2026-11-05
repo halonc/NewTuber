@@ -493,6 +493,16 @@ public class VideoGroup {
             return;
         }
 
+        // NEWTUBE(fresh-home): Home answers a refetch with mostly the cards it just answered (measured
+        // 73-94% of a topic feed's cards repeat, even for a brand new anonymous visitor), so the same
+        // screen comes back on every pull. Drop what this Home has already shown; RecentHomeCards caps
+        // the drops per fetch so a repeated page still shows something.
+        RecentHomeCards recent = isRecommendationSection() ? recentHomeCards() : null;
+        boolean freshHomeCard = recent != null;
+        if (freshHomeCard && recent.shouldDrop(video.videoId)) {
+            return;
+        }
+
         if (mVideos == null) {
             mVideos = new ArrayList<>();
         }
@@ -508,6 +518,31 @@ public class VideoGroup {
         }
 
         mVideos.add(idx, video);
+
+        if (freshHomeCard) {
+            recent.record(video.videoId);
+        }
+    }
+
+    /** The sections that recommend rather than list: Home and the autoplay queue. */
+    private boolean isRecommendationSection() {
+        int type = getType();
+
+        return type == MediaGroup.TYPE_HOME || type == MediaGroup.TYPE_SUGGESTIONS;
+    }
+
+    /** The window of cards Home has already shown, or null when the feature is off or unavailable. */
+    private static RecentHomeCards recentHomeCards() {
+        if (GlobalPreferences.context() == null) {
+            return null;
+        }
+
+        try {
+            return com.liskovsoft.smartyoutubetv2.common.prefs.HomeFeedData
+                    .instance(GlobalPreferences.context()).recent();
+        } catch (Throwable e) { // a prefs failure must not empty the feed
+            return null;
+        }
     }
 
     /** Whether the user blocked {@code video}'s channel. NEWTUBE(shorts): also autoplay's rule. */

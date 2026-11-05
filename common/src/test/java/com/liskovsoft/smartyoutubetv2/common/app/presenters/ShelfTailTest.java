@@ -329,4 +329,24 @@ public class ShelfTailTest {
         assertSame(a, tail.next(10));
         assertEquals(0, tail.emptyPages());
     }
+
+    // NEWTUBE(fresh-home): a section that drops the cards it has already shown comes up short by
+    // design, so a few short rounds are worth another fetch - but they stay counted.
+    @Test
+    public void shortRoundsAreAllowedWhileTheSectionFiltersShownCards() {
+        ShelfTail<Shelf> tail = tail();
+
+        tail.startRound(120);
+        assertTrue("a productive round resets the budget", tail.startRound(132, true));
+
+        assertTrue(tail.startRound(137, true));
+        assertTrue(tail.startRound(142, true));
+        assertTrue(tail.startRound(147, true));
+        assertFalse("the fourth short round ends the feed", tail.startRound(152, true));
+        assertEquals("five rounds ran: the load, a productive one, three short ones", 5, tail.rounds());
+
+        ShelfTail<Shelf> dead = tail();
+        dead.startRound(120);
+        assertFalse("no new card at all ends it, hint or no hint", dead.startRound(120, true));
+    }
 }

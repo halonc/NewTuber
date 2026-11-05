@@ -110,6 +110,10 @@
     <string name="mobile_settings_thumbnails_middle">A frame from the middle of the video</string>
     <string name="mobile_settings_thumbnails_end">A frame from the end of the video</string>
     <string name="mobile_settings_original_titles">Original titles</string>
+    <string name="mobile_settings_fresh_home">Show new videos on Home</string>
+    <string name="mobile_settings_fresh_home_summary">Hide the videos Home has already shown you today, so a refresh fills the screen with new ones instead of the same cards. Turn off to see YouTube\'s feed exactly as it sends it.</string>
+    <string name="mobile_settings_fresh_home_reset">Forget what Home has shown</string>
+    <string name="mobile_settings_fresh_home_reset_summary">Start the Home feed over from nothing shown</string>
     <string name="mobile_settings_original_titles_summary">Show titles in the language they were written in, not YouTube\'s translation</string>
     <string name="mobile_settings_channels_order">Order of Channels in You</string>
     <string name="mobile_settings_channels_order_recent">Recently watched first</string>
