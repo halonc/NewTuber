@@ -2,9 +2,11 @@
 <resources>
     <string-array name="update_urls">
         <!-- NEWTUBE(phone-only): updates come from our own repo, not upstream SmartTube TV. -->
-        <!-- The latest published release's manifest (release.yml attaches it to every tag build). -->
-        <item>https://github.com/aleixrodriala/newtube/releases/latest/download/newtube.json</item>
-        <!-- The "latest" pre-release feed that 1.10.3 and older read; update-feed.yml keeps it in step. -->
-        <item>https://github.com/aleixrodriala/newtube/releases/download/latest/newtube.json</item>
+        <!-- NEWTUBE(in-app-update): this fork ships its own manifest as a release asset, so the
+             app's "Check for updates" offers the patched APK instead of upstream's. Leaving the
+             upstream URLs in would let a later upstream release offer an unpatched APK under a
+             different package name (io.github.aleixrodriala.arc, no .debug) - a second app. -->
+        <item>https://github.com/halonc/NewTuber/releases/latest/download/newtube.json</item>
+        <item>https://github.com/halonc/NewTuber/releases/download/latest/newtube.json</item>
     </string-array>
 </resources>
