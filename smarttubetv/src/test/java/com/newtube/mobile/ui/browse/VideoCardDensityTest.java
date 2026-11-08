@@ -60,15 +60,23 @@ public class VideoCardDensityTest {
         // The title starts at the card's own edge instead of 52dp in.
         assertTrue("title should start at the card edge, was " + title.getLeft(),
                 title.getLeft() <= dp(context, 6));
-        // ...and runs to the menu button, so it owns nearly the whole card.
+        // ...and now runs to the card's right edge: the menu button left the title row.
         assertTrue("title should own the card width: " + title.getWidth() + " of " + card.getWidth(),
-                title.getWidth() >= card.getWidth() - dp(context, 60));
-        assertTrue("title must end before the menu button", title.getRight() <= overflow.getLeft() + 1);
+                title.getWidth() >= card.getWidth() - dp(context, 20));
 
-        // The avatar is on the middle line now: its row sits below the title, and inside the row
-        // the avatar is centred with the meta text. (The avatar's own getTop() is relative to the
-        // row, so the row is what has to be compared with the title.)
+        // The avatar and the menu button are both on the middle line now: its row sits below the
+        // title, the avatar is centred with the meta text, and the button sits on the row's right
+        // edge - where YouTube's own app keeps it. (Children's getTop() is relative to the row, so
+        // the row is what has to be compared with the title.)
         View metaRow = card.findViewById(R.id.video_meta_row);
+        int rowCentre = (metaRow.getTop() + metaRow.getBottom()) / 2;
+        int buttonCentre = (overflow.getTop() + overflow.getBottom()) / 2;
+        assertTrue("the menu button should sit on the middle line (" + buttonCentre + " vs " + rowCentre + ")",
+                Math.abs(buttonCentre - rowCentre) <= dp(context, 2));
+        assertTrue("the menu button should be at the row's right edge",
+                overflow.getRight() >= metaRow.getRight() - 1);
+        assertTrue("the middle line must stop before the menu button",
+                meta.getRight() <= overflow.getLeft() + 1);
         assertTrue("the middle line should sit below the title (row.top=" + metaRow.getTop()
                 + ", title.bottom=" + title.getBottom() + ")", metaRow.getTop() >= title.getBottom());
         int avatarCentre = (avatar.getTop() + avatar.getBottom()) / 2;
@@ -109,13 +117,13 @@ public class VideoCardDensityTest {
 
     @Test
     @Config(qualifiers = "w411dp-h891dp-xxhdpi")
-    public void compactIsOffByDefaultAndPersists() {
+    public void compactIsOnByDefaultAndPersists() {
         Context context = context();
-        assertTrue("compact cards must default to off", !MobileCardsData.isCompactCards(context));
-        MobileCardsData.setCompactCards(context, true);
-        assertTrue("the switch must stick", MobileCardsData.isCompactCards(context));
+        assertTrue("compact cards must default to on", MobileCardsData.isCompactCards(context));
         MobileCardsData.setCompactCards(context, false);
-        assertTrue(!MobileCardsData.isCompactCards(context));
+        assertTrue("turning it off must stick", !MobileCardsData.isCompactCards(context));
+        MobileCardsData.setCompactCards(context, true);
+        assertTrue(MobileCardsData.isCompactCards(context));
     }
 
     private static Context context() {

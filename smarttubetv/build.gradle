@@ -316,8 +316,8 @@ android {
             // 1.0.0 -> 10000, 1.0.1 -> 10001, 1.1.0 -> 10100, 2.0.0 -> 20000.
             // NEWTUBE(in-app-update): the fork publishes its own update manifest, so the code
             // has to move on every release or the app keeps saying "up to date". 1.17.2 -> 11702.
-            versionCode 11702
-            versionName "1.17.2"
+            versionCode 11703
+            versionName "1.17.3"
         }
     }
 }

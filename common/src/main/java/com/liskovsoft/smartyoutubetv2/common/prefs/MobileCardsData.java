@@ -9,6 +9,9 @@ import android.content.Context;
  *
  * <p>Stored in {@link AppPrefs} like the rest of the phone settings, so it follows the account
  * profile the same way the fresh-home window does.</p>
+ *
+ * <p>On by default: the owner asked for the dense look out of the box; turning it off still gives
+ * the roomier card.</p>
  */
 public final class MobileCardsData {
     private static final String COMPACT_CARDS = "compact_cards";
@@ -17,7 +20,7 @@ public final class MobileCardsData {
     }
 
     public static boolean isCompactCards(Context context) {
-        return AppPrefs.instance(context).getBoolean(COMPACT_CARDS, false);
+        return AppPrefs.instance(context).getBoolean(COMPACT_CARDS, true);
     }
 
     public static void setCompactCards(Context context, boolean value) {
