@@ -514,11 +514,19 @@
         <item name="android:layout_height">204dp</item>
         <item name="android:background">@drawable/bg_skeleton_block</item>
     </style>
+    <!-- NEWTUBE(card-density): the title now owns the card's full width, so line one does too;
+         line two is short like a wrapped title, and the avatar shares the middle line below. -->
     <style name="MobileSkeletonFeedLineWide">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">15dp</item>
         <item name="android:layout_marginTop">12dp</item>
-        <item name="android:layout_marginEnd">48dp</item>
+        <item name="android:background">@drawable/bg_skeleton_block</item>
+    </style>
+    <style name="MobileSkeletonFeedLineTitleShort">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">15dp</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:layout_marginEnd">120dp</item>
         <item name="android:background">@drawable/bg_skeleton_block</item>
     </style>
     <!-- NEWTUBE(feed-avatars): avatar + text lines under the thumb; the avatar shows on Home and
@@ -526,13 +534,14 @@
     <style name="MobileSkeletonFeedTextRow">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:gravity">center_vertical</item>
         <item name="android:orientation">horizontal</item>
     </style>
     <style name="MobileSkeletonFeedAvatar">
         <item name="android:layout_width">@dimen/mobile_card_avatar_size</item>
         <item name="android:layout_height">@dimen/mobile_card_avatar_size</item>
         <item name="android:layout_marginStart">4dp</item>
-        <item name="android:layout_marginTop">12dp</item>
         <item name="android:layout_marginEnd">8dp</item>
         <item name="android:background">@drawable/bg_comment_skeleton_avatar</item>
         <item name="android:tag">avatar</item>
@@ -547,7 +556,7 @@
     <style name="MobileSkeletonFeedLineNarrow">
         <item name="android:layout_width">180dp</item>
         <item name="android:layout_height">12dp</item>
-        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:layout_marginStart">8dp</item>
         <item name="android:background">@drawable/bg_skeleton_block</item>
     </style>
 </resources>

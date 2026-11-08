@@ -10,6 +10,27 @@
     <dimen name="mobile_card_corner_radius">12dp</dimen>
     <!-- Channel avatar on Home/Subscriptions cards (YouTube's 36 dp). -->
     <dimen name="mobile_card_avatar_size">36dp</dimen>
+    <!-- NEWTUBE(card-density): the card's two looks. "Standard" is the original geometry; "compact"
+         is the setting: tighter margins, a smaller avatar and middle line, a narrower ⋮ so more of
+         the title survives. VideoCardAdapter applies one or the other in code (the mode is a
+         runtime preference), so these pairs must stay in step. -->
+    <dimen name="mobile_card_spacing_compact">6dp</dimen>
+    <dimen name="mobile_card_avatar_size_compact">32dp</dimen>
+    <dimen name="mobile_card_title_top_margin">10dp</dimen>
+    <dimen name="mobile_card_title_top_margin_compact">8dp</dimen>
+    <dimen name="mobile_card_meta_bottom_margin">10dp</dimen>
+    <dimen name="mobile_card_meta_bottom_margin_compact">8dp</dimen>
+    <!-- Space between the avatar and the first character of "Channel · 1.2M views · 3 weeks ago". -->
+    <dimen name="mobile_card_meta_gap">8dp</dimen>
+    <!-- Title: YouTube's 14-15sp on a full-width cell. Was 16sp; two lines of 16sp truncated long
+         YouTube titles about a third early, 15sp fits roughly two more characters per line. -->
+    <dimen name="mobile_card_title_text_size">15sp</dimen>
+    <dimen name="mobile_card_meta_text_size">13sp</dimen>
+    <dimen name="mobile_card_meta_text_size_compact">12sp</dimen>
+    <dimen name="mobile_card_overflow_size">48dp</dimen>
+    <!-- The ⋮ glyph itself (the icon drawable is 24dp); the button box and its padding follow it. -->
+    <dimen name="mobile_card_overflow_glyph">24dp</dimen>
+    <dimen name="mobile_card_overflow_size_compact">40dp</dimen>
     <!-- Standard phone toolbar height (actionBarSize). -->
     <dimen name="mobile_title_bar_height">56dp</dimen>
     <!-- MobileAppDialogActivity: a sheet on a wide (landscape) window stops at Material's 640dp

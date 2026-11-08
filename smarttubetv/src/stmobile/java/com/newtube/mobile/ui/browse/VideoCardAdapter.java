@@ -3,6 +3,8 @@ package com.newtube.mobile.ui.browse;
 import android.annotation.SuppressLint;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +26,7 @@ import com.newtube.mobile.ui.common.ChannelAvatars;
 import com.newtube.mobile.ui.playback.PlayerTransitionBridge;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.prefs.MainUIData;
+import com.liskovsoft.smartyoutubetv2.common.prefs.MobileCardsData;
 import com.liskovsoft.smartyoutubetv2.common.utils.ClickbaitRemover;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 
@@ -134,6 +137,87 @@ public class VideoCardAdapter extends ListAdapter<Video, RecyclerView.ViewHolder
         return position >= 0 && position < getItemCount() && getItemViewType(position) == VIEW_TYPE_CHANNEL;
     }
 
+    /**
+     * NEWTUBE(card-density): swap the card between its standard and "compact" looks.
+     *
+     * <p>The mode is a runtime preference, not a layout qualifier, so the two variants cannot be
+     * two XML files without duplicating the whole card. Everything here comes from
+     * {@code dimens_mobile.xml} (the {@code *_compact} pairs), which keeps the numbers in one
+     * place and lets the layout stay the standard one.</p>
+     *
+     * <p>Package-private and static so a Robolectric test can assert the geometry without having
+     * to build a {@link Video}.</p>
+     */
+    static void applyCardDensity(@NonNull View itemView, boolean compact) {
+        Resources res = itemView.getResources();
+
+        ViewGroup.LayoutParams rootParams = itemView.getLayoutParams();
+        if (rootParams instanceof ViewGroup.MarginLayoutParams) {
+            int spacing = res.getDimensionPixelSize(compact
+                    ? R.dimen.mobile_card_spacing_compact : R.dimen.mobile_card_spacing);
+            ViewGroup.MarginLayoutParams margins = (ViewGroup.MarginLayoutParams) rootParams;
+            margins.setMargins(spacing, spacing, spacing, spacing);
+            itemView.setLayoutParams(margins);
+        }
+
+        View title = itemView.findViewById(R.id.video_title);
+        if (title != null) {
+            ViewGroup.LayoutParams params = title.getLayoutParams();
+            if (params instanceof ViewGroup.MarginLayoutParams) {
+                ViewGroup.MarginLayoutParams margins = (ViewGroup.MarginLayoutParams) params;
+                margins.topMargin = res.getDimensionPixelSize(compact
+                        ? R.dimen.mobile_card_title_top_margin_compact : R.dimen.mobile_card_title_top_margin);
+                title.setLayoutParams(margins);
+            }
+            if (title instanceof TextView) {
+                ((TextView) title).setTextSize(TypedValue.COMPLEX_UNIT_PX,
+                        res.getDimensionPixelSize(R.dimen.mobile_card_title_text_size));
+            }
+        }
+
+        View metaRow = itemView.findViewById(R.id.video_meta_row);
+        if (metaRow != null) {
+            ViewGroup.LayoutParams params = metaRow.getLayoutParams();
+            if (params instanceof ViewGroup.MarginLayoutParams) {
+                ViewGroup.MarginLayoutParams margins = (ViewGroup.MarginLayoutParams) params;
+                margins.bottomMargin = res.getDimensionPixelSize(compact
+                        ? R.dimen.mobile_card_meta_bottom_margin_compact : R.dimen.mobile_card_meta_bottom_margin);
+                metaRow.setLayoutParams(margins);
+            }
+        }
+
+        View meta = itemView.findViewById(R.id.video_meta);
+        if (meta instanceof TextView) {
+            ((TextView) meta).setTextSize(TypedValue.COMPLEX_UNIT_PX, res.getDimensionPixelSize(compact
+                    ? R.dimen.mobile_card_meta_text_size_compact : R.dimen.mobile_card_meta_text_size));
+        }
+
+        View avatar = itemView.findViewById(R.id.video_channel_avatar);
+        if (avatar != null) {
+            int size = res.getDimensionPixelSize(compact
+                    ? R.dimen.mobile_card_avatar_size_compact : R.dimen.mobile_card_avatar_size);
+            ViewGroup.LayoutParams params = avatar.getLayoutParams();
+            params.width = size;
+            params.height = size;
+            avatar.setLayoutParams(params);
+        }
+
+        View overflow = itemView.findViewById(R.id.video_overflow);
+        if (overflow != null) {
+            int size = res.getDimensionPixelSize(compact
+                    ? R.dimen.mobile_card_overflow_size_compact : R.dimen.mobile_card_overflow_size);
+            ViewGroup.LayoutParams params = overflow.getLayoutParams();
+            params.width = size;
+            params.height = size;
+            overflow.setLayoutParams(params);
+            // Keep the 24dp glyph centred at its own size instead of letting the smaller box
+            // shrink it (a 40dp button with 12dp padding would leave 16dp for the icon).
+            int glyph = res.getDimensionPixelSize(R.dimen.mobile_card_overflow_glyph);
+            int pad = Math.max(0, (size - glyph) / 2);
+            overflow.setPadding(pad, pad, pad, pad);
+        }
+    }
+
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -225,6 +309,8 @@ public class VideoCardAdapter extends ListAdapter<Video, RecyclerView.ViewHolder
         private final View mOverflow;
         private final ImageView mAvatar; // null on layouts without one
         private Video mVideo;
+        /** NEWTUBE(card-density): the look already applied to this holder, null until the first bind. */
+        private Boolean mCompactApplied;
         private String mBoundThumbUrl;
         private String mBoundAvatarUrl;
 
@@ -255,6 +341,14 @@ public class VideoCardAdapter extends ListAdapter<Video, RecyclerView.ViewHolder
         public void bind(Video video, OnVideoLongClickListener longClickListener) {
             mVideo = video;
             Context context = itemView.getContext();
+
+            // NEWTUBE(card-density): Settings can flip this while the feed is alive, so re-apply
+            // only when the value actually changed since the last bind.
+            boolean compact = MobileCardsData.isCompactCards(context);
+            if (mCompactApplied == null || mCompactApplied != compact) {
+                applyCardDensity(itemView, compact);
+                mCompactApplied = compact;
+            }
 
             itemView.setOnLongClickListener(v ->
                     mVideo != null && longClickListener != null && longClickListener.onVideoLongClick(mVideo));

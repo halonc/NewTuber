@@ -19,6 +19,7 @@ import com.liskovsoft.smartyoutubetv2.common.misc.VideoDownloads;
 import com.liskovsoft.smartyoutubetv2.common.prefs.GeneralData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.HomeFeedData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.MainUIData;
+import com.liskovsoft.smartyoutubetv2.common.prefs.MobileCardsData;
 import com.liskovsoft.smartyoutubetv2.common.prefs.SearchData;
 import com.liskovsoft.smartyoutubetv2.common.utils.ClickbaitRemover;
 import com.liskovsoft.smartyoutubetv2.tv.R;
@@ -187,6 +188,16 @@ final class AppPages {
                 context.getString(R.string.mobile_settings_fresh_home_summary),
                 () -> HomeFeedData.instance(context).isFreshHomeEnabled(),
                 value -> HomeFeedData.instance(context).setFreshHomeEnabled(value)));
+
+        // NEWTUBE(card-density): the phone feed's first look-and-feel switch. Compact keeps the
+        // one-column grid and the two-line title but tightens the card: smaller side margins,
+        // 32dp avatar, 12sp middle line and a narrower ... button, so a card is ~8dp shorter and
+        // the title gets the extra width.
+        rows.add(SettingsRow.toggle(context.getString(R.string.mobile_settings_compact_cards),
+                context.getString(R.string.mobile_settings_compact_cards_summary),
+                () -> MobileCardsData.isCompactCards(context),
+                value -> MobileCardsData.setCompactCards(context, value))
+                .needsRestart());
 
         // On the phone these change what the feed holds, not its layout (both work): kept as choices.
         rows.add(SettingsRow.<Boolean>choice(context.getString(R.string.mobile_settings_pinned_channels))

@@ -4,7 +4,9 @@
      replace it without a jarring layout shift. Shown only while a section loads into an
      EMPTY grid - never over content (returning to already-loaded content stays instant).
      NEWTUBE(feed-avatars): the avatar circles (tag "avatar") show where the cards have one, on
-     Home and Subscriptions (MobileBrowseActivity.setSkeletonAvatars). -->
+     Home and Subscriptions (MobileBrowseActivity.setSkeletonAvatars).
+     NEWTUBE(card-density): matches the card's order - full-width title lines first, then the
+     avatar on the middle line - so the real cards do not jump when they replace the skeleton. -->
 <com.newtube.mobile.ui.common.ShimmerLinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -18,34 +20,31 @@
 
     <LinearLayout style="@style/MobileSkeletonFeedCard">
         <View style="@style/MobileSkeletonFeedThumb" />
+        <View style="@style/MobileSkeletonFeedLineWide" />
+        <View style="@style/MobileSkeletonFeedLineTitleShort" />
         <LinearLayout style="@style/MobileSkeletonFeedTextRow">
             <View style="@style/MobileSkeletonFeedAvatar" />
-            <LinearLayout style="@style/MobileSkeletonFeedText">
-                <View style="@style/MobileSkeletonFeedLineWide" />
-                <View style="@style/MobileSkeletonFeedLineNarrow" />
-            </LinearLayout>
+            <View style="@style/MobileSkeletonFeedLineNarrow" />
         </LinearLayout>
     </LinearLayout>
 
     <LinearLayout style="@style/MobileSkeletonFeedCard">
         <View style="@style/MobileSkeletonFeedThumb" />
+        <View style="@style/MobileSkeletonFeedLineWide" />
+        <View style="@style/MobileSkeletonFeedLineTitleShort" />
         <LinearLayout style="@style/MobileSkeletonFeedTextRow">
             <View style="@style/MobileSkeletonFeedAvatar" />
-            <LinearLayout style="@style/MobileSkeletonFeedText">
-                <View style="@style/MobileSkeletonFeedLineWide" />
-                <View style="@style/MobileSkeletonFeedLineNarrow" />
-            </LinearLayout>
+            <View style="@style/MobileSkeletonFeedLineNarrow" />
         </LinearLayout>
     </LinearLayout>
 
     <LinearLayout style="@style/MobileSkeletonFeedCard">
         <View style="@style/MobileSkeletonFeedThumb" />
+        <View style="@style/MobileSkeletonFeedLineWide" />
+        <View style="@style/MobileSkeletonFeedLineTitleShort" />
         <LinearLayout style="@style/MobileSkeletonFeedTextRow">
             <View style="@style/MobileSkeletonFeedAvatar" />
-            <LinearLayout style="@style/MobileSkeletonFeedText">
-                <View style="@style/MobileSkeletonFeedLineWide" />
-                <View style="@style/MobileSkeletonFeedLineNarrow" />
-            </LinearLayout>
+            <View style="@style/MobileSkeletonFeedLineNarrow" />
         </LinearLayout>
     </LinearLayout>
 
